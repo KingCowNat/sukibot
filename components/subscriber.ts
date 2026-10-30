@@ -5,7 +5,7 @@ async function syncMember(member: GuildMember) {
   const isSubscribed = member.roles.cache.has(config.twitchSubRoleId);
   const hasRole = member.roles.cache.has(config.subscriberRoleId);
   
-  if (isSubscribed && hasRole) return;
+  if (isSubscribed === hasRole) return;
 
   try {
     if (isSubscribed) {

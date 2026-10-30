@@ -1,7 +1,7 @@
-import { Events } from "discord.js";
+import { Client, Events, GuildMember } from "discord.js";
 import { config } from "../config.js";
 
-async function syncMember(member) {
+async function syncMember(member: GuildMember) {
   const isSubscribed = member.roles.cache.has(config.twitchSubRoleId);
   const hasRole = member.roles.cache.has(config.subscriberRoleId);
   
@@ -20,7 +20,7 @@ async function syncMember(member) {
   }
 }
 
-export async function startSubscriberRoleSync(client) {
+export async function startSubscriberRoleSync(client: Client<true>) {
   client.on(Events.GuildMemberUpdate, (oldMember, member) => {
     if (member.guild.id === config.guildId) syncMember(member);
   });

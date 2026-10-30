@@ -1,21 +1,21 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { EmbedBuilder } from "discord.js";
+import { Client, EmbedBuilder } from "discord.js";
 import { config } from "../config.js";
-import { getStream } from "./twitch.js";
+import { getStream, type TwitchStream } from "./twitch.js";
 
 const POLL_INTERVAL_MS = 60_000;
 const STATE_FILE = new URL("../state.json", import.meta.url);
 
-async function loadLastStreamId() {
+async function loadLastStreamId(): Promise<string | null> {
   try {
     return JSON.parse(await readFile(STATE_FILE, "utf8")).lastStreamId;
   } catch (error) {
-    if (error.code === "ENOENT") return null;
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw error;
   }
 }
 
-function buildLiveMessage(stream) {
+function buildLiveMessage(stream: TwitchStream) {
   const url = `https://twitch.tv/${stream.user_login}`;
   const thumbnail = stream.thumbnail_url.replace("{width}", "1280").replace("{height}", "720");
 
@@ -38,8 +38,12 @@ function buildLiveMessage(stream) {
   };
 }
 
-export async function startLiveAnnouncements(client) {
+export async function startLiveAnnouncements(client: Client<true>) {
   const channel = await client.channels.fetch(config.liveChannelId);
+  if (!channel?.isSendable()) {
+    throw new Error("Live channel is not sendable");
+  }
+
   let lastStreamId = await loadLastStreamId();
 
   const check = async () => {

@@ -1,5 +1,20 @@
 import { config } from "../config.js";
 
+export interface TwitchStream {
+  id: string;
+  user_login: string;
+  user_name: string;
+  title: string;
+  game_name: string;
+  thumbnail_url: string;
+}
+
+interface OAuthResponse {
+  access_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
 // Get Twitch OAuth2 token needed for API access
 async function getAccessToken() {
   const url = "https://id.twitch.tv/oauth2/token";
@@ -17,10 +32,10 @@ async function getAccessToken() {
       throw new Error(`Twitch Auth failed: ${response.status} ${await response.text()}`);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as OAuthResponse;
     return result.access_token;
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
   }
 }
 
@@ -40,12 +55,9 @@ export async function getStream() {
       throw new Error(`Twitch streams request failed: ${response.status} ${await response.text()}`);
     }
 
-    const { data } = await response.json();
-    console.log(data[0]);
+    const { data } = (await response.json()) as { data: TwitchStream[] };
     return data[0] ?? null;
   } catch (error) {
-    console.error(error.message);
+    console.error(error);
   }
 }
-
-getStream();

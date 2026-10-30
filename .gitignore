@@ -1,6 +1,10 @@
 # Bot state
 state.json
 
+# Wrangler
+.dev.vars
+.wrangler
+
 # Logs
 logs
 *.log

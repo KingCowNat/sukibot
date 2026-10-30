@@ -1,20 +1,15 @@
-import { Client, Events, GatewayIntentBits } from "discord.js";
-import { config } from "./config.js";
-import { startLiveAnnouncements } from "./components/announcement.js";
-import { startSubscriberRoleSync } from "./components/subscriber.js";
+import type { Env } from "./config";
+import { startLiveAnnouncements } from "./components/announcement";
+import { syncSubscriberRoles } from "./components/subscriber";
 
-const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers]
-});
+const ROLE_SYNC_CRON = "*/15 * * * *";
 
-client.once(Events.ClientReady, async (readyClient) => {
-  console.log(`Logged in as ${readyClient.user.tag}`);
-  try {
-    await Promise.all([startLiveAnnouncements(readyClient), startSubscriberRoleSync(readyClient)]);
-  } catch (error) {
-    console.error("Startup failed:", error);
-    process.exit(1);
+export default {
+  async scheduled(controller, env) {
+    if (controller.cron === ROLE_SYNC_CRON) {
+      await syncSubscriberRoles(env);
+    } else {
+      await startLiveAnnouncements(env);
+    }
   }
-});
-
-client.login(config.discordToken);
+} satisfies ExportedHandler<Env>;

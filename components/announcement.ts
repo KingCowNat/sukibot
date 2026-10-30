@@ -1,36 +1,27 @@
-import { readFile, writeFile } from "node:fs/promises";
-import { Client, EmbedBuilder } from "discord.js";
-import { config } from "../config.js";
-import { getStream, type TwitchStream } from "./twitch.js";
+import type { Env } from "../config";
+import { discordRequest } from "./discord";
+import { getStream, type TwitchStream } from "./twitch";
 
-const POLL_INTERVAL_MS = 60_000;
-const STATE_FILE = new URL("../state.json", import.meta.url);
-
-async function loadLastStreamId(): Promise<string | null> {
-  try {
-    return JSON.parse(await readFile(STATE_FILE, "utf8")).lastStreamId;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw error;
-  }
-}
+const LAST_STREAM_KEY = "lastStreamId";
 
 function buildLiveMessage(stream: TwitchStream) {
   const url = `https://twitch.tv/${stream.user_login}`;
   const thumbnail = stream.thumbnail_url.replace("{width}", "1280").replace("{height}", "720");
 
-  const embed = new EmbedBuilder()
-    .setColor(0x9146ff)
-    .setTitle(stream.title || `${stream.user_name} is streaming`)
-    .setURL(url)
-    .setImage(`${thumbnail}?stream=${stream.id}`); // Stream ID forces the thumbnail to be from the current stream
-
-  if (stream.game_name) {
-    embed.addFields({
-      name: "Playing",
-      value: stream.game_name
-    });
-  }
+  const embed = {
+    color: 0x9146ff,
+    title: stream.title || `${stream.user_name} is streaming`,
+    url,
+    image: {
+      url: `${thumbnail}?stream=${stream.id}` // Stream ID forces the thumbnail to be from the current stream
+    },
+    ...(stream.game_name && {
+      fields: [{
+        name: "Playing",
+        value: stream.game_name
+      }]
+    })
+  };
 
   return {
     content: `**${stream.user_name}** is live! ${url}`,
@@ -38,28 +29,20 @@ function buildLiveMessage(stream: TwitchStream) {
   };
 }
 
-export async function startLiveAnnouncements(client: Client<true>) {
-  const channel = await client.channels.fetch(config.liveChannelId);
-  if (!channel?.isSendable()) {
-    throw new Error("Live channel is not sendable");
-  }
+export async function startLiveAnnouncements(env: Env) {
+  const stream = await getStream(env);
+  if (!stream) return;
 
-  let lastStreamId = await loadLastStreamId();
+  const lastStreamId = await env.STATE.get(LAST_STREAM_KEY, {
+    cacheTtl: 30
+  });
+  if (stream.id === lastStreamId) return;
 
-  const check = async () => {
-    try {
-      const stream = await getStream();
-      if (!stream || stream.id === lastStreamId) return;
+  await discordRequest(env, `/channels/${env.LIVE_CHANNEL_ID}/messages`, {
+    method: "POST",
+    body: JSON.stringify(buildLiveMessage(stream))
+  });
 
-      await channel.send(buildLiveMessage(stream));
-      lastStreamId = stream.id;
-      await writeFile(STATE_FILE, JSON.stringify({ lastStreamId }));
-      console.log(`Announced stream ${stream.id}`);
-    } catch (error) {
-      console.error("Live check failed:", error);
-    }
-  };
-
-  await check();
-  setInterval(check, POLL_INTERVAL_MS);
+  await env.STATE.put(LAST_STREAM_KEY, stream.id);
+  console.log(`Announced stream ${stream.id}`);
 }

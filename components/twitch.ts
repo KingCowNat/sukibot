@@ -1,4 +1,4 @@
-import { config } from "../config.js";
+import type { Env } from "../config";
 
 export interface TwitchStream {
   id: string;
@@ -16,7 +16,7 @@ interface OAuthResponse {
 }
 
 // Get Twitch OAuth2 token needed for API access
-async function getAccessToken() {
+async function getAccessToken(env: Env) {
   const url = "https://id.twitch.tv/oauth2/token";
 
   try {
@@ -25,7 +25,7 @@ async function getAccessToken() {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: `client_id=${config.twitchClientId}&client_secret=${config.twitchClientSecret}&grant_type=client_credentials` 
+      body: `client_id=${env.TWITCH_CLIENT_ID}&client_secret=${env.TWITCH_CLIENT_SECRET}&grant_type=client_credentials` 
     });
 
     if (!response.ok) {
@@ -40,9 +40,9 @@ async function getAccessToken() {
   }
 }
 
-export async function getStream() {
-  const url = `https://api.twitch.tv/helix/streams?user_login=${config.twitchLogin}`;
-  const accessToken = await getAccessToken();
+export async function getStream(env: Env) {
+  const url = `https://api.twitch.tv/helix/streams?user_login=${env.TWITCH_LOGIN}`;
+  const accessToken = await getAccessToken(env);
 
   if (!accessToken) return null;
 
@@ -51,7 +51,7 @@ export async function getStream() {
       method: "GET",
       headers: {
        "Authorization": "Bearer " + accessToken,
-        "Client-Id": config.twitchClientId
+        "Client-Id": env.TWITCH_CLIENT_ID
       }
     });
     if (!response.ok) {

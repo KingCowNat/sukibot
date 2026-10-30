@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "tsx index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
     "typecheck": "tsc"
   },
   "keywords": [],
@@ -20,13 +20,9 @@
   },
   "packageManager": "pnpm@12.16.1",
   "type": "module",
-  "dependencies": {
-    "discord.js": "^14.27.0",
-    "dotenv": "^18.0.9",
-    "tsx": "^4.23.15"
-  },
   "devDependencies": {
-    "@types/node": "^26.6.6",
-    "typescript": "^7.0.2"
+    "@cloudflare/workers-types": "^5.20261029.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.156.0"
   }
 }

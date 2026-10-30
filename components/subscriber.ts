@@ -1,33 +1,51 @@
-import { Client, Events, GuildMember } from "discord.js";
-import { config } from "../config.js";
+import type { Env } from "../config";
+import { discordRequest } from "./discord";
 
-async function syncMember(member: GuildMember) {
-  const isSubscribed = member.roles.cache.has(config.twitchSubRoleId);
-  const hasRole = member.roles.cache.has(config.subscriberRoleId);
-  
-  if (isSubscribed === hasRole) return;
+const PAGE_SIZE = 1000;
+const MAX_ROLE_CHANGES = 45; // Keeps each run under the Free plan limit of 50 subrequests
 
-  try {
-    if (isSubscribed) {
-      await member.roles.add(config.subscriberRoleId);
-    } else {
-      await member.roles.remove(config.subscriberRoleId);
-    }
-
-    console.log(`${isSubscribed ? "Added" : "Removed"} subscriber role: ${member.user.tag}`);
-  } catch (error) {
-    console.error(`Could not update subscriber role for ${member.user.tag}:`, error);
-  }
+interface GuildMember {
+  user: {
+    id: string;
+    username: string;
+  };
+  roles: string[];
 }
 
-export async function startSubscriberRoleSync(client: Client<true>) {
-  client.on(Events.GuildMemberUpdate, (oldMember, member) => {
-    if (member.guild.id === config.guildId) syncMember(member);
-  });
+export async function syncSubscriberRoles(env: Env) {
+  let after = "0";
+  let roleChanges = 0;
 
-  const guild = await client.guilds.fetch(config.guildId);
-  const members = await guild.members.fetch();
-  for (const member of members.values()) {
-    await syncMember(member);
+  while (true) {
+    const response = await discordRequest(env, `/guilds/${env.GUILD_ID}/members?limit=${PAGE_SIZE}&after=${after}`);
+    const members = (await response.json()) as GuildMember[];
+
+    for (const member of members) {
+      const isSubscribed = member.roles.includes(env.TWITCH_SUB_ROLE_ID);
+      const hasRole = member.roles.includes(env.SUBSCRIBER_ROLE_ID);
+
+      if (isSubscribed === hasRole) continue;
+
+      if (roleChanges === MAX_ROLE_CHANGES) {
+        console.log("Role change limit reached, continuing next run");
+        return
+      }
+
+      roleChanges++;
+
+      try {
+        await discordRequest(env, `/guilds/${env.GUILD_ID}/members/${member.user.id}/roles/${env.SUBSCRIBER_ROLE_ID}`, {
+          method: isSubscribed ? "PUT" : "DELETE"
+        });
+
+        console.log(`${isSubscribed ? "Added" : "Removed"} subscriber role: ${member.user.username}`);
+      } catch (error) {
+        console.error(`Could not update subscriber role for ${member.user.username}:`, error);
+      }
+    }
+    
+    const lastMember = members.at(-1);
+    if (!lastMember || members.length < PAGE_SIZE) return;
+    after = lastMember.user.id;
   }
 }

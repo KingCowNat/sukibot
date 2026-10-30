@@ -7,12 +7,11 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "es2025",
-    // For nodejs:
-    "lib": ["ES2025"],
-    "types": ["node"],
-    // and npm install -D @types/node
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2022",
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types"],
 
     // Other Outputs
     "sourceMap": true,

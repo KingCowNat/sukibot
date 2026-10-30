@@ -36,12 +36,15 @@ async function getAccessToken() {
     return result.access_token;
   } catch (error) {
     console.error(error);
+    return null;
   }
 }
 
 export async function getStream() {
   const url = `https://api.twitch.tv/helix/streams?user_login=${config.twitchLogin}`;
   const accessToken = await getAccessToken();
+
+  if (!accessToken) return null;
 
   try {
     const response = await fetch(url, {
@@ -59,5 +62,6 @@ export async function getStream() {
     return data[0] ?? null;
   } catch (error) {
     console.error(error);
+    return null;
   }
 }

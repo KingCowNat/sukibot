@@ -1,3 +1,6 @@
+# Bot state
+state.json
+
 # Logs
 logs
 *.log

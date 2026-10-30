@@ -1,0 +1,30 @@
+{
+  "name": "sukibot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.16.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.16.1",
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.9",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

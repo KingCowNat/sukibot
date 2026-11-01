@@ -6,6 +6,4 @@ export interface Env {
   TWITCH_CLIENT_ID: string;
   TWITCH_CLIENT_SECRET: string;
   TWITCH_LOGIN: string;
-  TWITCH_SUB_ROLE_ID: string;
-  SUBSCRIBER_ROLE_ID: string;
 }

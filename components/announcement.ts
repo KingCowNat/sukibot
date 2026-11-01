@@ -24,7 +24,7 @@ function buildLiveMessage(stream: TwitchStream) {
   };
 
   return {
-    content: `**${stream.user_name}** is live! ${url}`,
+    content: `@everyone **${stream.user_name}** is live! ${url}`,
     embeds: [embed]
   };
 }

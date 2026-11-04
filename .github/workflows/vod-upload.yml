@@ -11,7 +11,7 @@ on:
         description: Twitch VOD ID (twitch.tv/videos/<id>)
         required: true
       title:
-        description: YouTube title (defaults to the Twitch title)
+        description: YouTube title (defaults to the games played and date)
         required: false
 
 jobs:
@@ -20,8 +20,10 @@ jobs:
     timeout-minutes: 360
     env:
       VOD_ID: ${{ github.event.client_payload.vod_id || inputs.vod_id }}
-      VOD_TITLE: ${{ github.event.client_payload.title || inputs.title }}
+      VOD_TITLE: ${{ github.event.client_payload.title }}
       VOD_CREATED_AT: ${{ github.event.client_payload.created_at }}
+      VOD_GAME: ${{ github.event.client_payload.game }}
+      YOUTUBE_TITLE: ${{ inputs.title }}
     steps:
       - uses: actions/checkout@v4
 

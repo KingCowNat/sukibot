@@ -8,6 +8,8 @@ const UPLOAD_DELAY_MS = 5 * 60 * 1000;
 interface VodStream {
   streamId: string;
   userId: string;
+  // The latest game, since the stream can start on the previous stream's game
+  game?: string;
   endedAt?: number;
 }
 
@@ -32,7 +34,8 @@ async function uploadVod(env: Env, tracked: VodStream) {
       client_payload: {
         vod_id: vod.id,
         title: vod.title,
-        created_at: vod.created_at
+        created_at: vod.created_at,
+        game: tracked.game
       }
     })
   });
@@ -51,17 +54,18 @@ export async function trackVods(env: Env, stream: TwitchStream | null) {
   });
 
   if (stream) {
-    if (tracked?.streamId === stream.id && !tracked.endedAt) return;
+    if (tracked?.streamId === stream.id && !tracked.endedAt && tracked.game === stream.game_name) return;
 
     // A different stream started before the last one was uploaded
     if (tracked && tracked.streamId !== stream.id) {
       await uploadVod(env, tracked);
     }
 
-    // Also clears endedAt if the same stream came back after a disconnect
+    // Also updates the game, and clears endedAt if the same stream came back after a disconnect
     await env.STATE.put(VOD_STREAM_KEY, JSON.stringify({
       streamId: stream.id,
-      userId: stream.user_id
+      userId: stream.user_id,
+      game: stream.game_name
     } satisfies VodStream));
     return;
   }

@@ -13,6 +13,9 @@ TWITCH_CLIENT_SECRET=<YOUR_TWITCH_CLIENT_SECRET>
 # The channel name from twitch.tv/<name>
 TWITCH_LOGIN=<TWITCH_CHANNEL_NAME>
 
+# Fine-grained token for this repo with Contents: read & write, used to start the VOD upload workflow
+GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>
+
 # The role created by Discord's Twitch integration
 TWITCH_SUB_ROLE_ID=<TWITCH_INTEGRATION_ROLE_ID>
 # The role the bot gives to subscribers

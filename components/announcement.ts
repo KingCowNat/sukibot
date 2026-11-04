@@ -1,6 +1,6 @@
 import type { Env } from "../config";
 import { discordRequest } from "./discord";
-import { getStream, type TwitchStream } from "./twitch";
+import type { TwitchStream } from "./twitch";
 
 const LAST_STREAM_KEY = "lastStreamId";
 
@@ -29,10 +29,7 @@ function buildLiveMessage(stream: TwitchStream) {
   };
 }
 
-export async function startLiveAnnouncements(env: Env) {
-  const stream = await getStream(env);
-  if (!stream) return;
-
+export async function startLiveAnnouncements(env: Env, stream: TwitchStream) {
   const lastStreamId = await env.STATE.get(LAST_STREAM_KEY, {
     cacheTtl: 30
   });

@@ -6,4 +6,6 @@ export interface Env {
   TWITCH_CLIENT_ID: string;
   TWITCH_CLIENT_SECRET: string;
   TWITCH_LOGIN: string;
+  GITHUB_TOKEN: string;
+  GITHUB_REPO: string;
 }

@@ -1,0 +1,53 @@
+name: Upload VOD to YouTube
+
+on:
+  # Sent by the bot when a stream ends
+  repository_dispatch:
+    types: [twitch-vod]
+  # Manual re-runs from the Actions tab
+  workflow_dispatch:
+    inputs:
+      vod_id:
+        description: Twitch VOD ID (twitch.tv/videos/<id>)
+        required: true
+      title:
+        description: YouTube title (defaults to the Twitch title)
+        required: false
+
+concurrency:
+  group: vod-upload
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      VOD_ID: ${{ github.event.client_payload.vod_id || inputs.vod_id }}
+      VOD_TITLE: ${{ github.event.client_payload.title || inputs.title }}
+      VOD_CREATED_AT: ${{ github.event.client_payload.created_at }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Long 1080p60 VODs can exceed the runner's default free disk space
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install yt-dlp google-api-python-client google-auth
+
+      - name: Download VOD
+        run: yt-dlp --concurrent-fragments 8 -o vod.mp4 "https://www.twitch.tv/videos/$VOD_ID"
+
+      - name: Upload to YouTube
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: python scripts/upload_youtube.py vod.mp4

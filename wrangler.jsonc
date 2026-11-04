@@ -24,6 +24,7 @@
     "LIVE_CHANNEL_ID": "1554628921289482240",
     "PUBLIC_KEY": "94490c9f5204643aaf5707dd720cba2f84b7b59abe56437d8f4911944e22549d",
     "TWITCH_CLIENT_ID": "fb98wc3j7ojw9z37fha47wq5wd43ez",
-    "TWITCH_LOGIN": "55pectrum"
+    "TWITCH_LOGIN": "55pectrum",
+    "GITHUB_REPO": "KingCowNat/sukibot"
   }
 }

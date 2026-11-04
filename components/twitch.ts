@@ -2,11 +2,19 @@ import type { Env } from "../config";
 
 export interface TwitchStream {
   id: string;
+  user_id: string;
   user_login: string;
   user_name: string;
   title: string;
   game_name: string;
   thumbnail_url: string;
+}
+
+export interface TwitchVideo {
+  id: string;
+  stream_id: string | null;
+  title: string;
+  created_at: string;
 }
 
 interface OAuthResponse {
@@ -60,6 +68,33 @@ export async function getStream(env: Env) {
 
     const { data } = (await response.json()) as { data: TwitchStream[] };
     return data[0] ?? null;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+// Find the archived VOD (past broadcast) created by a stream
+export async function getStreamVod(env: Env, userId: string, streamId: string) {
+  const url = `https://api.twitch.tv/helix/videos?user_id=${userId}&type=archive&first=5`;
+  const accessToken = await getAccessToken(env);
+
+  if (!accessToken) return null;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + accessToken,
+        "Client-Id": env.TWITCH_CLIENT_ID
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Twitch videos request failed: ${response.status} ${await response.text()}`);
+    }
+
+    const { data } = (await response.json()) as { data: TwitchVideo[] };
+    return data.find((video) => video.stream_id === streamId) ?? null;
   } catch (error) {
     console.error(error);
     return null;

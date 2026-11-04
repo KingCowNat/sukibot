@@ -15,8 +15,3 @@ TWITCH_LOGIN=<TWITCH_CHANNEL_NAME>
 
 # Fine-grained token for this repo with Contents: read & write, used to start the VOD upload workflow
 GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>
-
-# The role created by Discord's Twitch integration
-TWITCH_SUB_ROLE_ID=<TWITCH_INTEGRATION_ROLE_ID>
-# The role the bot gives to subscribers
-SUBSCRIBER_ROLE_ID=<YOUR_ROLE_ID>

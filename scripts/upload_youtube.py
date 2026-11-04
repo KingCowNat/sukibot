@@ -1,7 +1,9 @@
 """Upload a downloaded Twitch VOD to YouTube. Run by .github/workflows/vod-upload.yml."""
+import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -21,9 +23,24 @@ def build_title(title, created_at):
     return title[:100]
 
 
+def read_vod_info(path):
+    # Manual runs don't get a title or date from the bot, so use the metadata yt-dlp saved
+    info_path = next(Path(path).parent.glob("*.info.json"), None)
+    if not info_path:
+        return None, None
+    info = json.loads(info_path.read_text(encoding="utf-8"))
+    created_at = None
+    if info.get("timestamp"):
+        created_at = datetime.fromtimestamp(info["timestamp"], timezone.utc).isoformat()
+    return info.get("title"), created_at
+
+
 def main():
     path = sys.argv[1]
     vod_id = os.environ["VOD_ID"]
+    info_title, info_created_at = read_vod_info(path)
+    title = os.environ.get("VOD_TITLE") or info_title
+    created_at = os.environ.get("VOD_CREATED_AT") or info_created_at
 
     credentials = Credentials(
         None,
@@ -37,7 +54,7 @@ def main():
 
     body = {
         "snippet": {
-            "title": build_title(os.environ.get("VOD_TITLE"), os.environ.get("VOD_CREATED_AT")),
+            "title": build_title(title, created_at),
             "description": f"Originally streamed on Twitch: https://www.twitch.tv/videos/{vod_id}",
             "categoryId": GAMING_CATEGORY_ID,
         },

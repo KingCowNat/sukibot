@@ -14,10 +14,6 @@ on:
         description: YouTube title (defaults to the Twitch title)
         required: false
 
-concurrency:
-  group: vod-upload
-  cancel-in-progress: false
-
 jobs:
   upload:
     runs-on: ubuntu-latest
@@ -43,7 +39,7 @@ jobs:
         run: pip install yt-dlp google-api-python-client google-auth
 
       - name: Download VOD
-        run: yt-dlp --concurrent-fragments 8 -o vod.mp4 "https://www.twitch.tv/videos/$VOD_ID"
+        run: yt-dlp --concurrent-fragments 8 --write-info-json -o vod.mp4 "https://www.twitch.tv/videos/$VOD_ID"
 
       - name: Upload to YouTube
         env:

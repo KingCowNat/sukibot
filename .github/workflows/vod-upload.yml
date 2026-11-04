@@ -16,6 +16,8 @@ on:
 
 jobs:
   upload:
+    # Automatic uploads only run when the AUTO_VOD_UPLOAD repo variable is "true"; manual runs always do
+    if: github.event_name == 'workflow_dispatch' || vars.AUTO_VOD_UPLOAD == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
